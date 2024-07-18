@@ -1,8 +1,19 @@
 import React from "react";
+import { useParams } from "react-router-dom";
+import Header from "../layout/Header";
 
 const Game: React.FC = () => {
+    const { id } = useParams();
+
     return (
-        <h1>Odd One Out - Game Room</h1>
+        <div className="game-container">
+            <Header />
+            <main>
+                <p>
+                    Room Id: {id}
+                </p>
+            </main>
+        </div>
     );
 }
 

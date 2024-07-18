@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Header from "../layout/Header";
 
-const Home: React.FC = () => {
+const Join: React.FC = () => {
     const [nameValue, setNameValue] = useState<string>("");
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -9,14 +9,15 @@ const Home: React.FC = () => {
     };
 
     return (
-        <div className="home-container">
+        <div className="join-container">
             <Header />
             <main>
                 <input placeholder="Enter name" value={nameValue} onChange={handleInputChange} autoFocus />
-                <button type="button" disabled={!nameValue}>Create Room</button> {/* call backend to create room with uuid and token */}
+                <button type="button" disabled={!nameValue}>Join Room</button> 
             </main>
         </div>
     );
 }
 
-export default Home;
+export default Join;
+
