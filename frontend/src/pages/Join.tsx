@@ -1,19 +1,18 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Header from "../layout/Header";
 
 const Join: React.FC = () => {
-    const { id } = useParams();
     const navigate = useNavigate();
 
-    const [nameValue, setNameValue] = useState<string>("");
+    const [roomCode, setRoomCode] = useState<string>("");
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setNameValue(event.target.value);
+        setRoomCode(event.target.value);
     };
 
     const handleSubmit = () => {
-        navigate("/game/" + id );
+        navigate("/game/" + roomCode );
     };
 
     return (
@@ -21,8 +20,8 @@ const Join: React.FC = () => {
             <Header />
             <main>
                 <form onSubmit={handleSubmit}>
-                    <input placeholder="Enter name" value={nameValue} onChange={handleInputChange} autoFocus />
-                    <button type="submit" disabled={!nameValue}>Join Room</button>
+                    <input placeholder="ENTER CODE" value={roomCode} onChange={handleInputChange} autoFocus />
+                    <button type="submit" disabled={!roomCode}>PLAY</button>
                 </form>
             </main>
         </div >

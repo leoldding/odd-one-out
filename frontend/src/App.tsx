@@ -12,8 +12,8 @@ const App: React.FC = () => {
             <Router>
                 <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/join/:id/:token" element={<Join />} />
-                    <Route path="/game/:id" element={<Game />} />
+                    <Route path="/join" element={<Join />} />
+                    <Route path="/game/:code" element={<Game />} />
                     <Route path="/404" element={<NotFound />} />
                     <Route path="*" element={<Navigate to="/404" />} />
                 </Routes>
