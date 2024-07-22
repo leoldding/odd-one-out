@@ -10,18 +10,21 @@ const Home: React.FC = () => {
         setNameValue(event.target.value);
     };
 
-    const handleSubmit = () => {
+    const handleCreate = () => {
         navigate("/game/tempID");
+    };
+
+    const handleJoin = () => {
+        navigate("/join");
     };
 
     return (
         <div className="home-container">
             <Header />
             <main>
-                <form onSubmit={handleSubmit}>
-                    <input placeholder="Enter name" value={nameValue} onChange={handleInputChange} autoFocus />
-                    <button type="submit" disabled={!nameValue}>Create Room</button> {/* call backend to create room with uuid and token */}
-                </form>
+                <input placeholder="ENTER NAME" value={nameValue} onChange={handleInputChange} autoFocus />
+                <button type="button" disabled={!nameValue} onClick={handleCreate}>CREATE ROOM</button>
+                <button type="button" disabled={!nameValue} onClick={handleJoin}>JOIN ROOM</button>
             </main>
         </div>
     );
