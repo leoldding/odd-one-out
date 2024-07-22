@@ -16,12 +16,13 @@ func RegisterRoomHandlers(router *mux.Router) {
 }
 
 func CreateRoom(w http.ResponseWriter, r *http.Request) {
-	var player models.Player
-	if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
+	var createRoomRequest models.CreateRoomRequest
+	if err := json.NewDecoder(r.Body).Decode(&createRoomRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	if err := services.CreateRoom(&player); err != nil {
+	var createRoomResponse models.CreateRoomResponse
+	if err := services.CreateRoom(createRoomRequest, &createRoomResponse); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	json.NewEncoder(w).Encode(player)
+	json.NewEncoder(w).Encode(createRoomResponse)
 }
