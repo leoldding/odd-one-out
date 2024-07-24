@@ -1,5 +1,4 @@
 import Home from "./pages/Home";
-import Join from "./pages/Join";
 import Game from "./pages/Game";
 import NotFound from "./pages/NotFound";
 import React from "react";
@@ -11,8 +10,7 @@ const App: React.FC = () => {
         <>
             <Router>
                 <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/join" element={<Join />} />
+                    <Route path="/:code?" element={<Home />} />
                     <Route path="/game/:code" element={<Game />} />
                     <Route path="/404" element={<NotFound />} />
                     <Route path="*" element={<Navigate to="/404" />} />

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../layout/Header";
 
 const Home: React.FC = () => {
+    const { code } = useParams<string>();
+
     const [nameValue, setNameValue] = useState<string>("");
     const navigate = useNavigate();
 
@@ -11,11 +13,11 @@ const Home: React.FC = () => {
     };
 
     const handleCreate = () => {
-        navigate("/game/tempID");
+        navigate("/game/createdID");
     };
 
     const handleJoin = () => {
-        navigate("/join");
+        navigate("/game/" + code);
     };
 
     return (
@@ -23,8 +25,8 @@ const Home: React.FC = () => {
             <Header />
             <main>
                 <input placeholder="ENTER NAME" value={nameValue} onChange={handleInputChange} autoFocus />
+                <button type="button" disabled={!nameValue || !code} onClick={handleJoin}>PLAY GAME</button>
                 <button type="button" disabled={!nameValue} onClick={handleCreate}>CREATE ROOM</button>
-                <button type="button" disabled={!nameValue} onClick={handleJoin}>JOIN ROOM</button>
             </main>
         </div>
     );
