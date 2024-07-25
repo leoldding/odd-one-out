@@ -15,6 +15,7 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 	handlers.RegisterRoomHandlers(router)
+	handlers.RegisterGameHandlers(router)
 	headersOk := cors.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	originsOk := cors.AllowedOrigins([]string{"http://localhost:5173"})
 	methodsOk := cors.AllowedMethods([]string{"GET", "POST"})
