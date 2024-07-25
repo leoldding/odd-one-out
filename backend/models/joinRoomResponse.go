@@ -1,5 +1,5 @@
 package models
 
-type JoinPlayerResponse struct {
+type JoinRoomResponse struct {
 	Player Player `json:"player"`
 }

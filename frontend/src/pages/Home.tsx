@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../layout/Header";
-import { createRoom } from "../api/Room";
+import { createRoom, joinRoom } from "../api/Room";
 
 const Home: React.FC = () => {
     const { code } = useParams<string>();
@@ -16,13 +16,26 @@ const Home: React.FC = () => {
     const handleCreate = async() => {
         try {
             const data = await createRoom(name);
-            localStorage.setItem("player", JSON.stringify(data));
+            sessionStorage.setItem("name", data.name);
+            sessionStorage.setItem("roomCode", data.roomCode);
+            sessionStorage.setItem("leader", data.leader.toString());
+            navigate("/game/" + sessionStorage.getItem("roomCode"));
         } catch (err) {
             console.log(err);
         }
     };
 
-    const handleJoin = () => {
+    const handleJoin = async () => {
+        try {
+            const data = await joinRoom(name, code);
+            sessionStorage.setItem("name", data.name);
+            sessionStorage.setItem("roomCode", data.roomCode);
+            sessionStorage.setItem("leader", data.leader.toString());
+            navigate("/game/" + sessionStorage.getItem("roomCode"));
+        } catch (err) {
+            console.log(err);
+        }
+        
         navigate("/game/" + code);
     };
 
