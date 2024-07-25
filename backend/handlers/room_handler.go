@@ -14,7 +14,6 @@ import (
 func RegisterRoomHandlers(router *mux.Router) {
 	log.Println("Registering Room Handlers")
 	router.HandleFunc("/room/create", CreateRoom).Methods("POST")
-	router.HandleFunc("/room/player", JoinPlayer).Methods("POST")
 	router.HandleFunc("/room/join", JoinRoom).Methods("POST")
 }
 
@@ -36,24 +35,6 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(createRoomResponse)
 }
 
-func JoinPlayer(w http.ResponseWriter, r *http.Request) {
-	var joinPlayerRequest models.JoinPlayerRequest
-	if err := json.NewDecoder(r.Body).Decode(&joinPlayerRequest); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if err := utils.IsStructFull(joinPlayerRequest); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var joinPlayerResponse models.JoinPlayerResponse
-	if err := services.JoinPlayer(joinPlayerRequest, &joinPlayerResponse); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(joinPlayerResponse)
-}
-
 func JoinRoom(w http.ResponseWriter, r *http.Request) {
 	var joinRoomRequest models.JoinRoomRequest
 	if err := json.NewDecoder(r.Body).Decode(&joinRoomRequest); err != nil {
@@ -64,9 +45,10 @@ func JoinRoom(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := services.JoinRoom(joinRoomRequest); err != nil {
+	var joinRoomResponse models.JoinRoomResponse
+	if err := services.JoinRoom(joinRoomRequest, &joinRoomResponse); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(joinRoomResponse)
 }

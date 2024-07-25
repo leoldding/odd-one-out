@@ -1,7 +1,7 @@
 package models
 
 type Player struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Leader bool   `json:"leader"`
+	Name     string `json:"name"`
+	RoomCode string `json:"roomCode"`
+	Leader   bool   `json:"leader"`
 }
