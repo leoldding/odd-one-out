@@ -7,6 +7,7 @@ import (
 	cors "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/leoldding/odd-one-out/handlers"
+	"github.com/leoldding/odd-one-out/services"
 )
 
 func main() {
@@ -16,6 +17,7 @@ func main() {
 	})
 	handlers.RegisterRoomHandlers(router)
 	handlers.RegisterGameHandlers(router)
+	go services.Publisher.Publish()
 	headersOk := cors.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	originsOk := cors.AllowedOrigins([]string{"http://localhost:5173"})
 	methodsOk := cors.AllowedMethods([]string{"GET", "POST"})

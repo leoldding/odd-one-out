@@ -36,9 +36,8 @@ const Game: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        console.log(websocket)
         websocket.onopen = () => {
-            console.log("successful websocket connection")
+            websocket.send(JSON.stringify({"name": sessionStorage.getItem("name"), "roomCode": sessionStorage.getItem("roomCode"),}))
         };
 
         websocket.onmessage = (event) => { 
