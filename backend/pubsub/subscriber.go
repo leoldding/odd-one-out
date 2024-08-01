@@ -1,6 +1,7 @@
 package pubsub
 
 import (
+	"encoding/json"
 	"log"
 	"sync"
 	"time"
@@ -22,16 +23,21 @@ func (subscriber *Subscriber) Run(publisher *Publisher) {
 	go subscriber.ReadFromWebsocket(publisher, stop)
 	go subscriber.SendMessagesToWebsocket(publisher, stop)
 
+	otherPlayers := publisher.GetPlayersInGame(subscriber.GameCode)
+	message := Message{GameCode: subscriber.GameCode, Command: "OTHER PLAYERS", Body: otherPlayers}
+	subscriber.MessageChannel <- message
+
 	<-stop
 	<-stop
 
-	close(subscriber.MessageChannel)
 	publisher.Unsubscribe(subscriber, subscriber.GameCode)
+	publisher.Broadcast(subscriber.GameCode, "PLAYER LEAVING", subscriber.Name)
 	subscriber.Websocket.Close()
 }
 
 func (subscriber *Subscriber) ReadFromWebsocket(publisher *Publisher, stop chan bool) {
 	defer func() {
+		close(subscriber.MessageChannel)
 		stop <- true
 	}()
 
@@ -42,7 +48,7 @@ func (subscriber *Subscriber) ReadFromWebsocket(publisher *Publisher, stop chan 
 			break
 		}
 
-		publisher.Broadcast(subscriber.GameCode, string(message))
+		publisher.Broadcast(subscriber.GameCode, "COMMAND FROM PLAYER", string(message))
 	}
 }
 
@@ -63,8 +69,12 @@ func (subscriber *Subscriber) SendMessagesToWebsocket(publisher *Publisher, stop
 				subscriber.mu.Unlock()
 				return
 			}
+			json, err := json.Marshal(message)
+			if err != nil {
+				log.Println("Error marshaling message:", err)
+			}
 			subscriber.mu.Lock()
-			if err := subscriber.Websocket.WriteMessage(websocket.TextMessage, []byte(message.Body)); err != nil {
+			if err := subscriber.Websocket.WriteMessage(websocket.TextMessage, json); err != nil {
 				subscriber.mu.Unlock()
 				log.Println("Error sending message to websocket:", err)
 				return

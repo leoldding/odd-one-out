@@ -37,8 +37,9 @@ func JoinGame(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(register, &subscriber)
 	subscriber.Websocket = websocket
 	subscriber.MessageChannel = make(chan pubsub.Message, 100)
+	go subscriber.Run(Publisher)
 
 	// subscribe to publisher
+	Publisher.Broadcast(subscriber.GameCode, "PLAYER JOINING", subscriber.Name)
 	Publisher.Subscribe(&subscriber, subscriber.GameCode)
-	subscriber.Run(Publisher)
 }
