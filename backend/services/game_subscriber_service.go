@@ -6,35 +6,39 @@ import (
 	"net/http"
 
 	ws "github.com/gorilla/websocket"
-	"github.com/leoldding/odd-one-out/models"
+	"github.com/leoldding/odd-one-out/pubsub"
 )
 
-type Subscriber models.Subscriber
+type Subscriber pubsub.Subscriber
 
 var upgrader = ws.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
-func UpgradeConnection(w http.ResponseWriter, r *http.Request) {
+func JoinGame(w http.ResponseWriter, r *http.Request) {
+	// upgrade to websocket
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	websocket, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("Error upgrading connection to WebSocket.\nERROR:%f", err)
+		log.Println("Error upgrading connection to websocket:", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	// get player name and game code
 	_, register, err := websocket.ReadMessage()
 	if err != nil {
-		log.Println("Error reading register message")
+		log.Println("Error reading initial websocket message:", err)
 	}
-	var subscriber models.Subscriber
+
+	// create subscriber
+	var subscriber pubsub.Subscriber
 	json.Unmarshal(register, &subscriber)
 	subscriber.Websocket = websocket
-	subscriber.MessageChannel = make(chan []byte, 256)
+	subscriber.MessageChannel = make(chan pubsub.Message, 100)
 
-	Publisher.Register <- subscriber
-
-	go subscriber.ReadMessages(Publisher)
-	go subscriber.WriteMessages()
+	// subscribe to publisher
+	Publisher.Subscribe(&subscriber, subscriber.GameCode)
+	subscriber.Run(Publisher)
 }

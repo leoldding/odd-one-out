@@ -1,12 +1,11 @@
 package services
 
 import (
-	"github.com/leoldding/odd-one-out/models"
+	"github.com/leoldding/odd-one-out/pubsub"
 )
 
-var Publisher = models.Publisher{
-	Broadcast:  make(chan models.Message),
-	Register:   make(chan models.Subscriber),
-	Deregister: make(chan models.Subscriber),
-	Games:      make(map[string]map[models.Subscriber]bool),
+var Publisher *pubsub.Publisher
+
+func CreatePublisher() {
+	Publisher = pubsub.NewPublisher()
 }

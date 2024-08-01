@@ -37,7 +37,7 @@ const Game: React.FC = () => {
 
     useEffect(() => {
         websocket.onopen = () => {
-            websocket.send(JSON.stringify({"name": sessionStorage.getItem("name"), "roomCode": sessionStorage.getItem("roomCode"),}))
+            websocket.send(JSON.stringify({"name": sessionStorage.getItem("name"), "gameCode": sessionStorage.getItem("gameCode"),}))
         };
 
         websocket.onmessage = (event) => { 

@@ -17,9 +17,9 @@ const Home: React.FC = () => {
         try {
             const data = await createRoom(name);
             sessionStorage.setItem("name", data.name);
-            sessionStorage.setItem("roomCode", data.roomCode);
+            sessionStorage.setItem("gameCode", data.gameCode);
             sessionStorage.setItem("leader", data.leader.toString());
-            navigate("/game/" + sessionStorage.getItem("roomCode"));
+            navigate("/game/" + sessionStorage.getItem("gameCode"));
         } catch (err) {
             console.log(err);
         }
@@ -29,9 +29,9 @@ const Home: React.FC = () => {
         try {
             const data = await joinRoom(name, code);
             sessionStorage.setItem("name", data.name);
-            sessionStorage.setItem("roomCode", data.roomCode);
+            sessionStorage.setItem("gameCode", data.gameCode);
             sessionStorage.setItem("leader", data.leader.toString());
-            navigate("/game/" + sessionStorage.getItem("roomCode"));
+            navigate("/game/" + sessionStorage.getItem("gameCode"));
         } catch (err) {
             console.log(err);
         }

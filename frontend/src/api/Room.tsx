@@ -15,13 +15,13 @@ export async function createRoom(name: string): Promise<Player> {
     return data.player
 }
 
-export async function joinRoom(name: string, roomCode?: string): Promise<Player> {
+export async function joinRoom(name: string, gameCode?: string): Promise<Player> {
     const response = await fetch("http://localhost:8080/room/join", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: name, roomCode: roomCode }),
+        body: JSON.stringify({ name: name, gameCode: gameCode }),
     });
     if (!response.ok) {
         throw new Error("ERROR");
