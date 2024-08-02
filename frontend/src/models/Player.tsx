@@ -1,5 +1,5 @@
 export interface Player {
     name: string;
-    roomCode: string;
+    gameCode: string;
     leader: boolean;
 }

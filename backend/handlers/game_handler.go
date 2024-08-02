@@ -14,5 +14,5 @@ func RegisterGameHandlers(router *mux.Router) {
 }
 
 func JoinGame(w http.ResponseWriter, r *http.Request) {
-	services.UpgradeConnection(w, r)
+	services.JoinGame(w, r)
 }

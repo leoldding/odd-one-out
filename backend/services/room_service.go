@@ -12,14 +12,14 @@ func CreateRoom(createRoomRequest models.CreateRoomRequest, createRoomResponse *
 	createRoomResponse.Player.Leader = true
 	b := make([]byte, 3)
 	rand.Read(b)
-	roomCode := hex.EncodeToString(b)
-	createRoomResponse.Player.RoomCode = roomCode
+	gameCode := hex.EncodeToString(b)
+	createRoomResponse.Player.GameCode = gameCode
 	return nil
 }
 
 func JoinRoom(joinRoomRequest models.JoinRoomRequest, joinRoomResponse *models.JoinRoomResponse) error {
 	joinRoomResponse.Player.Name = joinRoomRequest.Name
-	joinRoomResponse.Player.RoomCode = joinRoomRequest.RoomCode
+	joinRoomResponse.Player.GameCode = joinRoomRequest.GameCode
 	joinRoomResponse.Player.Leader = false
 	return nil
 }
