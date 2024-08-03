@@ -1,6 +1,4 @@
-import { Player } from "../models/Player";
-
-export async function createRoom(name: string): Promise<Player> {
+export async function createRoom(name: string) {
     const response = await fetch("http://localhost:8080/room/create", {
         method: "POST",
         headers: {
@@ -15,7 +13,7 @@ export async function createRoom(name: string): Promise<Player> {
     return data.player
 }
 
-export async function joinRoom(name: string, gameCode?: string): Promise<Player> {
+export async function joinRoom(name: string, gameCode?: string) {
     const response = await fetch("http://localhost:8080/room/join", {
         method: "POST",
         headers: {
