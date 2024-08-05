@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "../layout/Header";
 
@@ -10,50 +10,52 @@ const Game: React.FC = () => {
     const { code } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-
-    const [buttonText, setButtonText] = useState("Click to copy share link!");
+    const [questionText, setQuestionText] = useState("");
+    const [leaderText, setLeaderText] = useState("Get Question");
+    const [copyText, setCopyText] = useState("Click to copy share link!");
     const [copied, setCopied] = useState(false);
+    const [leader, setLeader] = useState(false);
     const [players, setPlayers] = useState<Player[]>([]);
+    const websocketRef = useRef<WebSocket | null>(null);
 
     const sortPlayers = (players: Player[]) => {
         return players.sort((a, b) => a.name.localeCompare(b.name))
     };
 
-    const handleClick = () => {
-        navigator.clipboard.writeText("localhost:5173/" + code);
-        setButtonText("Copied!");
-        setCopied(true);
-    };
-
+    // changes text of copy link button
     useEffect(() => {
         let timer: number;
         if (copied) {
             timer = window.setTimeout(() => {
-                setButtonText("Click to copy share link!");
+                setCopyText("Click to copy share link!");
                 setCopied(false);
             }, 3000);
         }
         return () => window.clearTimeout(timer);
     }, [copied]);
 
+    // check if player has name and is leader
     useEffect(() => {
         const name = sessionStorage.getItem("name");
         if (name === null) {
             navigate("/" + code);
         }
+        setLeader(sessionStorage.getItem("leader") === "true");
     }, []);
 
+    // websockets
     useEffect(() => {
         const websocket = new WebSocket("ws://localhost:8080/game")
+        websocketRef.current = websocket
 
+        // register player in backend
         websocket.onopen = () => {
             websocket.send(JSON.stringify({ "name": sessionStorage.getItem("name"), "gameCode": sessionStorage.getItem("gameCode"), }))
         };
 
+        // wait on commands from backend
         websocket.onmessage = (event) => {
-            console.log(event.data)
             const message = JSON.parse(event.data);
-            console.log(message)
             if (message.Command === "PLAYER JOINING") {
                 setPlayers((prevPlayers) => {
                     const updatedPlayers = [
@@ -79,6 +81,11 @@ const Game: React.FC = () => {
                 };
                 const otherPlayers = message.Body.split(",");
                 addPlayers(otherPlayers);
+            } else if (message.Command === "GET QUESTION" || message.Command === "REVEAL QUESTION") {
+                setQuestionText(message.Body);
+            } else if (message.Command === "REVEAL ODD ONE OUT") {
+                // chancge background color
+                console.log(message.Body)
             }
         };
 
@@ -90,10 +97,34 @@ const Game: React.FC = () => {
 
     }, [location]);
 
+    // copy join link
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText("localhost:5173/" + code);
+        setCopyText("Copied!");
+        setCopied(true);
+    };
+
+    // commands from leader
+    const handleLeaderButton = () => {
+        if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+            websocketRef.current.send(leaderText);
+            if (leaderText === "Get Question") {
+                setLeaderText("Reveal Question");
+            } else if (leaderText === "Reveal Question") {
+                setLeaderText("Reveal Odd One Out");
+            } else {
+                setLeaderText("Get Question")
+            }
+        }
+    }
+
     return (
         <div className="game-container">
             <Header />
             <main>
+                <div>
+                    <h2> {questionText} </h2>
+                </div>
                 <select>
                     {players.map(player => (
                         <option key={player.name}>
@@ -101,9 +132,13 @@ const Game: React.FC = () => {
                         </option>
                     ))}
                 </select>
-                <button type="button" onClick={handleClick}>
-                    {buttonText}
+                <button type="button" onClick={handleCopyLink}>
+                    {copyText}
                 </button>
+                <div>
+                    <button type="button"> Confirm Choice </button>
+                    {leader && <button type="button" onClick={handleLeaderButton}> {leaderText} </button>} 
+                </div>
             </main>
         </div>
     );

@@ -48,7 +48,14 @@ func (subscriber *Subscriber) ReadFromWebsocket(publisher *Publisher, stop chan 
 			break
 		}
 
-		publisher.Broadcast(subscriber.GameCode, "COMMAND FROM PLAYER", string(message))
+		command := string(message)
+		if command == "Get Question" {
+			publisher.GetQuestions(subscriber.GameCode)
+		} else if command == "Reveal Question" {
+			publisher.RevealQuestion(subscriber.GameCode)
+		} else if command == "Reveal Odd One Out" {
+			publisher.RevealOddOneOut(subscriber.GameCode)
+		}
 	}
 }
 
