@@ -13,6 +13,7 @@ type Publisher struct {
 }
 
 type info struct {
+	leader   *Subscriber
 	oddOne   *Subscriber
 	question string
 }
@@ -32,7 +33,9 @@ func (publisher *Publisher) Subscribe(subscriber *Subscriber, game string) {
 	// create game
 	if _, ok := publisher.Games[game]; !ok {
 		publisher.Games[game] = make(map[*Subscriber]struct{})
-		publisher.GameInfo[game] = &info{}
+		publisher.GameInfo[game] = &info{leader: subscriber}
+		message := Message{GameCode: game, Command: "NEW LEADER"}
+		subscriber.MessageChannel <- message
 	}
 	// add subscriber to game
 	publisher.Games[game][subscriber] = struct{}{}
@@ -50,6 +53,21 @@ func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, game string) {
 		delete(publisher.Games, game)
 		delete(publisher.GameInfo, game)
 	}
+
+	if subscriber == publisher.GameInfo[game].leader {
+		random := rand.Intn(len(publisher.Games[game]))
+		subscribers := publisher.Games[game]
+		for sub := range subscribers {
+			if random == 0 {
+				publisher.GameInfo[game].leader = sub
+				message := Message{GameCode: game, Command: "NEW LEADER"}
+				sub.MessageChannel <- message
+				break
+			}
+			random--
+		}
+	}
+
 	log.Println(subscriber.Name + " unsubscribed from game " + game)
 }
 

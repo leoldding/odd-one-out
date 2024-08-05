@@ -9,7 +9,6 @@ import (
 
 func CreateRoom(createRoomRequest models.CreateRoomRequest, createRoomResponse *models.CreateRoomResponse) error {
 	createRoomResponse.Player.Name = createRoomRequest.Name
-	createRoomResponse.Player.Leader = true
 	b := make([]byte, 3)
 	rand.Read(b)
 	gameCode := hex.EncodeToString(b)
@@ -20,6 +19,5 @@ func CreateRoom(createRoomRequest models.CreateRoomRequest, createRoomResponse *
 func JoinRoom(joinRoomRequest models.JoinRoomRequest, joinRoomResponse *models.JoinRoomResponse) error {
 	joinRoomResponse.Player.Name = joinRoomRequest.Name
 	joinRoomResponse.Player.GameCode = joinRoomRequest.GameCode
-	joinRoomResponse.Player.Leader = false
 	return nil
 }

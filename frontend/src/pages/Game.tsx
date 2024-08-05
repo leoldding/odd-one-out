@@ -34,14 +34,13 @@ const Game: React.FC = () => {
         return () => window.clearTimeout(timer);
     }, [copied]);
 
-    // check if player has name and is leader
+    // check if player has name 
     useEffect(() => {
         const name = sessionStorage.getItem("name");
         if (name === null) {
             navigate("/" + code);
         }
-        setLeader(sessionStorage.getItem("leader") === "true");
-    }, []);
+    }, [code, navigate]);
 
     // websockets
     useEffect(() => {
@@ -86,6 +85,8 @@ const Game: React.FC = () => {
             } else if (message.Command === "REVEAL ODD ONE OUT") {
                 // chancge background color
                 console.log(message.Body)
+            } else if (message.Command === "NEW LEADER") {
+                setLeader(true)
             }
         };
 
