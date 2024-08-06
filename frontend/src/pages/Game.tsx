@@ -16,6 +16,7 @@ const Game: React.FC = () => {
     const [copied, setCopied] = useState(false);
     const [leader, setLeader] = useState(false);
     const [players, setPlayers] = useState<Player[]>([]);
+    const [wait, setWait] = useState(0);
     const websocketRef = useRef<WebSocket | null>(null);
 
     const sortPlayers = (players: Player[]) => {
@@ -34,14 +35,13 @@ const Game: React.FC = () => {
         return () => window.clearTimeout(timer);
     }, [copied]);
 
-    // check if player has name and is leader
+    // check if player has name 
     useEffect(() => {
         const name = sessionStorage.getItem("name");
         if (name === null) {
             navigate("/" + code);
         }
-        setLeader(sessionStorage.getItem("leader") === "true");
-    }, []);
+    }, [code, navigate]);
 
     // websockets
     useEffect(() => {
@@ -56,7 +56,9 @@ const Game: React.FC = () => {
         // wait on commands from backend
         websocket.onmessage = (event) => {
             const message = JSON.parse(event.data);
-            if (message.Command === "PLAYER JOINING") {
+            if (wait != 0) {
+                setWait(wait-1);
+            } else if (message.Command === "PLAYER JOINING") {
                 setPlayers((prevPlayers) => {
                     const updatedPlayers = [
                         ...prevPlayers,
@@ -81,11 +83,19 @@ const Game: React.FC = () => {
                 };
                 const otherPlayers = message.Body.split(",");
                 addPlayers(otherPlayers);
-            } else if (message.Command === "GET QUESTION" || message.Command === "REVEAL QUESTION") {
+            } else if (message.Command === "GET QUESTION" || message.Command === "REVEAL QUESTION" || message.Command === "ODD ONE LEFT") {
                 setQuestionText(message.Body);
             } else if (message.Command === "REVEAL ODD ONE OUT") {
                 // chancge background color
                 console.log(message.Body)
+            } else if (message.Command === "NEW LEADER") {
+                setLeader(true)
+                setLeaderText(message.Body)
+            } else if (message.Command === "NEW ROUND") {
+                setLeaderText(message.Body)
+            } else if (message.Command === "WAIT") {
+               setWait(parseInt(message.Body)) 
+               setQuestionText("Waiting for next round to start...")
             }
         };
 

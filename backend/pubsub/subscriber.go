@@ -41,6 +41,7 @@ func (subscriber *Subscriber) ReadFromWebsocket(publisher *Publisher, stop chan 
 		stop <- true
 	}()
 
+	// read messages from websocket
 	for {
 		_, message, err := subscriber.Websocket.ReadMessage()
 		if err != nil {
@@ -64,9 +65,11 @@ func (subscriber *Subscriber) SendMessagesToWebsocket(publisher *Publisher, stop
 		stop <- true
 	}()
 
+	// heartbeat to keep connection alive
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
+	// send messages to websocket
 	for {
 		select {
 		case message, ok := <-subscriber.MessageChannel:
