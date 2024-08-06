@@ -40,6 +40,19 @@ func (publisher *Publisher) Subscribe(subscriber *Subscriber, game string) {
 	}
 	// add subscriber to game
 	publisher.Games[game][subscriber] = struct{}{}
+
+	// have subscriber wait for next round
+	switch publisher.GameInfo[game].state {
+	case "Reveal Question":
+		message := Message{GameCode: game, Command: "WAIT", Body: "2"}
+		subscriber.MessageChannel <- message
+		break
+	case "Reveal Odd One Out":
+		message := Message{GameCode: game, Command: "WAIT", Body: "1"}
+		subscriber.MessageChannel <- message
+		break
+	}
+
 	log.Println(subscriber.Name + " subscribed to game " + game)
 }
 

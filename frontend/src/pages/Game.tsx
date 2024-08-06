@@ -16,6 +16,7 @@ const Game: React.FC = () => {
     const [copied, setCopied] = useState(false);
     const [leader, setLeader] = useState(false);
     const [players, setPlayers] = useState<Player[]>([]);
+    const [wait, setWait] = useState(0);
     const websocketRef = useRef<WebSocket | null>(null);
 
     const sortPlayers = (players: Player[]) => {
@@ -55,7 +56,9 @@ const Game: React.FC = () => {
         // wait on commands from backend
         websocket.onmessage = (event) => {
             const message = JSON.parse(event.data);
-            if (message.Command === "PLAYER JOINING") {
+            if (wait != 0) {
+                setWait(wait-1);
+            } else if (message.Command === "PLAYER JOINING") {
                 setPlayers((prevPlayers) => {
                     const updatedPlayers = [
                         ...prevPlayers,
@@ -90,6 +93,9 @@ const Game: React.FC = () => {
                 setLeaderText(message.Body)
             } else if (message.Command === "NEW ROUND") {
                 setLeaderText(message.Body)
+            } else if (message.Command === "WAIT") {
+               setWait(parseInt(message.Body)) 
+               setQuestionText("Waiting for next round to start...")
             }
         };
 
