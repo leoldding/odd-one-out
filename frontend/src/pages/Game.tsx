@@ -80,13 +80,16 @@ const Game: React.FC = () => {
                 };
                 const otherPlayers = message.Body.split(",");
                 addPlayers(otherPlayers);
-            } else if (message.Command === "GET QUESTION" || message.Command === "REVEAL QUESTION") {
+            } else if (message.Command === "GET QUESTION" || message.Command === "REVEAL QUESTION" || message.Command === "ODD ONE LEFT") {
                 setQuestionText(message.Body);
             } else if (message.Command === "REVEAL ODD ONE OUT") {
                 // chancge background color
                 console.log(message.Body)
             } else if (message.Command === "NEW LEADER") {
                 setLeader(true)
+                setLeaderText(message.Body)
+            } else if (message.Command === "NEW ROUND") {
+                setLeaderText(message.Body)
             }
         };
 
