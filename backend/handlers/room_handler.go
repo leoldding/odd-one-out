@@ -47,7 +47,11 @@ func JoinRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	var joinRoomResponse models.JoinRoomResponse
 	if err := services.JoinRoom(joinRoomRequest, &joinRoomResponse); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err.Error() == "Name exists in game already." {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 	json.NewEncoder(w).Encode(joinRoomResponse)
