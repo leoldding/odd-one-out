@@ -14,7 +14,12 @@ const Home: React.FC = () => {
         setName(event.target.value);
     };
 
-    const handleCreate = async() => {
+    const handleCreate = async () => {
+        setNameError("");
+        if (!onlyLettersAndNumbers(name)) {
+            setNameError("Names can only contain letters and numbers.")
+            return 
+        }
         try {
             const data = await createRoom(name);
             sessionStorage.setItem("name", data.name);
@@ -27,6 +32,10 @@ const Home: React.FC = () => {
 
     const handleJoin = async () => {
         setNameError("");
+        if (!onlyLettersAndNumbers(name)) {
+            setNameError("Names can only contain letters and numbers.")
+            return 
+        }
         try {
             const data = await joinRoom(name, code);
             sessionStorage.setItem("name", data.name);
@@ -38,6 +47,10 @@ const Home: React.FC = () => {
         }
     };
 
+    function onlyLettersAndNumbers(str: string): boolean { 
+        return /^[A-Za-z0-9]*$/.test(str);
+    }
+    
     return (
         <div className="home-container">
             <Header />
