@@ -7,6 +7,7 @@ const Home: React.FC = () => {
     const { code } = useParams<string>();
 
     const [name, setName] = useState<string>("");
+    const [nameError, setNameError] = useState<string>("");
     const navigate = useNavigate();
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,6 +26,7 @@ const Home: React.FC = () => {
     };
 
     const handleJoin = async () => {
+        setNameError("");
         try {
             const data = await joinRoom(name, code);
             sessionStorage.setItem("name", data.name);
@@ -32,9 +34,8 @@ const Home: React.FC = () => {
             navigate("/game/" + sessionStorage.getItem("gameCode"));
         } catch (err) {
             console.log(err);
+            setNameError("Name must be unique.")
         }
-        
-        navigate("/game/" + code);
     };
 
     return (
@@ -42,6 +43,7 @@ const Home: React.FC = () => {
             <Header />
             <main>
                 <input placeholder="ENTER NAME" value={name} onChange={handleInputChange} autoFocus />
+                <div>{nameError}</div>
                 <button type="button" disabled={!name || !code} onClick={handleJoin}>PLAY GAME</button>
                 <button type="button" disabled={!name} onClick={handleCreate}>CREATE ROOM</button>
             </main>
