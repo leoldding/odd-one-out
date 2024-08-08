@@ -56,6 +56,8 @@ func (subscriber *Subscriber) ReadFromWebsocket(publisher *Publisher, stop chan 
 			publisher.RevealQuestion(subscriber.GameCode)
 		} else if command == "Reveal Odd One Out" {
 			publisher.RevealOddOneOut(subscriber.GameCode)
+		} else if command == "Confirm Choice" {
+			publisher.ConfirmChoices(subscriber.GameCode)
 		}
 	}
 }

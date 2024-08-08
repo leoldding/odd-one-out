@@ -14,10 +14,11 @@ type Publisher struct {
 }
 
 type info struct {
-	leader   *Subscriber
-	oddOne   *Subscriber
-	question string
-	state    string
+	leader    *Subscriber
+	oddOne    *Subscriber
+	question  string
+	state     string
+	confirmed int
 }
 
 func NewPublisher() *Publisher {
