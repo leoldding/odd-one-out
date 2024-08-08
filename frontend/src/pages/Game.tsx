@@ -10,13 +10,14 @@ const Game: React.FC = () => {
     const { code } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const [questionText, setQuestionText] = useState("");
-    const [leaderText, setLeaderText] = useState("Get Question");
-    const [copyText, setCopyText] = useState("Click to copy share link!");
-    const [copied, setCopied] = useState(false);
-    const [leader, setLeader] = useState(false);
+    const [questionText, setQuestionText] = useState<string>("");
+    const [leaderText, setLeaderText] = useState<string>("Get Question");
+    const [copyText, setCopyText] = useState<string>("Click to copy share link!");
+    const [copied, setCopied] = useState<boolean>(false);
+    const [leader, setLeader] = useState<boolean>(false);
     const [players, setPlayers] = useState<Player[]>([]);
-    const [wait, setWait] = useState(0);
+    const [playerCount, setPlayerCount] = useState<number>(0);
+    const [wait, setWait] = useState<number>(0);
     const websocketRef = useRef<WebSocket | null>(null);
 
     const sortPlayers = (players: Player[]) => {
@@ -57,7 +58,7 @@ const Game: React.FC = () => {
         websocket.onmessage = (event) => {
             const message = JSON.parse(event.data);
             if (wait != 0) {
-                setWait(wait-1);
+                setWait(wait - 1);
             } else if (message.Command === "PLAYER JOINING") {
                 setPlayers((prevPlayers) => {
                     const updatedPlayers = [
@@ -94,8 +95,10 @@ const Game: React.FC = () => {
             } else if (message.Command === "NEW ROUND") {
                 setLeaderText(message.Body)
             } else if (message.Command === "WAIT") {
-               setWait(parseInt(message.Body)) 
-               setQuestionText("Waiting for next round to start...")
+                setWait(parseInt(message.Body))
+                setQuestionText("Waiting for next round to start...")
+            } else if (message.Command === "PLAYER COUNT") {
+                setPlayerCount(parseInt(message.Body))
             }
         };
 
@@ -147,7 +150,7 @@ const Game: React.FC = () => {
                 </button>
                 <div>
                     <button type="button"> Confirm Choice </button>
-                    {leader && <button type="button" onClick={handleLeaderButton}> {leaderText} </button>} 
+                    {leader && <button type="button" onClick={handleLeaderButton} disabled={playerCount < 3}> {leaderText} </button>}
                 </div>
             </main>
         </div>
