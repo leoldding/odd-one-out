@@ -18,7 +18,7 @@ const Home: React.FC = () => {
         setNameError("");
         if (!onlyLettersAndNumbers(name)) {
             setNameError("Names can only contain letters and numbers.")
-            return 
+            return
         }
         try {
             const data = await createRoom(name);
@@ -34,7 +34,7 @@ const Home: React.FC = () => {
         setNameError("");
         if (!onlyLettersAndNumbers(name)) {
             setNameError("Names can only contain letters and numbers.")
-            return 
+            return
         }
         try {
             const data = await joinRoom(name, code);
@@ -47,10 +47,10 @@ const Home: React.FC = () => {
         }
     };
 
-    function onlyLettersAndNumbers(str: string): boolean { 
+    function onlyLettersAndNumbers(str: string): boolean {
         return /^[A-Za-z0-9]*$/.test(str);
     }
-    
+
     return (
         <div className="home-container">
             <Header />

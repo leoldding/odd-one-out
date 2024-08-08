@@ -3,6 +3,7 @@ package pubsub
 import (
 	"log"
 	"math/rand"
+	"strconv"
 	"sync"
 )
 
@@ -40,6 +41,10 @@ func (publisher *Publisher) Subscribe(subscriber *Subscriber, game string) {
 	}
 	// add subscriber to game
 	publisher.Games[game][subscriber] = struct{}{}
+
+	// tell leader number of players in game
+	message := Message{GameCode: game, Command: "PLAYER COUNT", Body: strconv.Itoa(len(publisher.Games[game]))}
+	publisher.GameInfo[game].leader.MessageChannel <- message
 
 	// have subscriber wait for next round
 	switch publisher.GameInfo[game].state {
@@ -95,6 +100,10 @@ func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, game string) {
 		message = Message{GameCode: game, Command: "NEW ROUND", Body: publisher.GameInfo[game].state}
 		publisher.GameInfo[game].leader.MessageChannel <- message
 	}
+
+	// tell leader number of players in game
+	message := Message{GameCode: game, Command: "PLAYER COUNT", Body: strconv.Itoa(len(publisher.Games[game]))}
+	publisher.GameInfo[game].leader.MessageChannel <- message
 
 	log.Println(subscriber.Name + " unsubscribed from game " + game)
 }
