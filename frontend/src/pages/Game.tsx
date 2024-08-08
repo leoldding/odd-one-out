@@ -17,6 +17,8 @@ const Game: React.FC = () => {
     const [leader, setLeader] = useState<boolean>(false);
     const [players, setPlayers] = useState<Player[]>([]);
     const [playerCount, setPlayerCount] = useState<number>(0);
+    const [dropdown, setDropdown] = useState<string>("");
+    const [choice, setChoice] = useState<string>("");
     const [wait, setWait] = useState<number>(0);
     const websocketRef = useRef<WebSocket | null>(null);
 
@@ -117,6 +119,15 @@ const Game: React.FC = () => {
         setCopied(true);
     };
 
+    const handleDropdownChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setDropdown(event.target.value);
+    }
+
+    // confirm answer choice
+    const handleChoiceButton = () => {
+        setChoice(dropdown);
+    };
+
     // commands from leader
     const handleLeaderButton = () => {
         if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
@@ -138,18 +149,22 @@ const Game: React.FC = () => {
                 <div>
                     <h2> {questionText} </h2>
                 </div>
-                <select>
-                    {players.map(player => (
-                        <option key={player.name}>
-                            {player.name}
-                        </option>
-                    ))}
-                </select>
+                <div>
+                    {!choice && <select value={dropdown} onChange={handleDropdownChange}>
+                        <option key={""} value={""} disabled> Select Player </option>
+                        {players.map(player => (
+                            <option key={player.name}>
+                                {player.name}
+                            </option>
+                        ))}
+                    </select>}
+                    {choice && <p>{choice}</p>}
+                </div>
                 <button type="button" onClick={handleCopyLink}>
                     {copyText}
                 </button>
                 <div>
-                    <button type="button"> Confirm Choice </button>
+                    <button type="button" onClick={handleChoiceButton}> Confirm Choice </button>
                     {leader && <button type="button" onClick={handleLeaderButton} disabled={playerCount < 3}> {leaderText} </button>}
                 </div>
             </main>
