@@ -11,6 +11,9 @@ func (publisher *Publisher) GetQuestions(game string) {
 	subscribers := publisher.Games[game]
 	defer publisher.mu.Unlock()
 
+	// reset confirmed
+	publisher.GameInfo[game].confirmed = make(map[string]struct{})
+
 	// select which subscriber to be the odd one out
 	var oddOne string
 	for subscriber := range subscribers {
@@ -27,7 +30,6 @@ func (publisher *Publisher) GetQuestions(game string) {
 	fakeQuestion := "fake question"
 	publisher.GameInfo[game].question = realQuestion
 	publisher.GameInfo[game].state = "Reveal Question"
-	publisher.GameInfo[game].confirmed = 0
 
 	// send questions to subscribers
 	for subscriber := range subscribers {
@@ -64,11 +66,11 @@ func (publisher *Publisher) RevealOddOneOut(game string) {
 	}
 }
 
-func (publisher *Publisher) ConfirmChoices(game string) {
+func (publisher *Publisher) ConfirmChoices(game string, name string) {
 	publisher.mu.Lock()
 	defer publisher.mu.Unlock()
 
-	publisher.GameInfo[game].confirmed++
-	message := Message{GameCode: game, Command: "CONFIRMED CHOICES", Body: strconv.Itoa(publisher.GameInfo[game].confirmed)}
+	publisher.GameInfo[game].confirmed[name] = struct{}{}
+	message := Message{GameCode: game, Command: "CONFIRMED CHOICES", Body: strconv.Itoa(len(publisher.GameInfo[game].confirmed))}
 	publisher.GameInfo[game].leader.MessageChannel <- message
 }

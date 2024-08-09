@@ -18,7 +18,7 @@ type info struct {
 	oddOne    *Subscriber
 	question  string
 	state     string
-	confirmed int
+	confirmed map[string]struct{}
 }
 
 func NewPublisher() *Publisher {
@@ -36,16 +36,12 @@ func (publisher *Publisher) Subscribe(subscriber *Subscriber, game string) {
 	// create game
 	if _, ok := publisher.Games[game]; !ok {
 		publisher.Games[game] = make(map[*Subscriber]struct{})
-		publisher.GameInfo[game] = &info{leader: subscriber, state: "Get Question"}
+		publisher.GameInfo[game] = &info{leader: subscriber, state: "Get Question", confirmed: make(map[string]struct{})}
 		message := Message{GameCode: game, Command: "NEW LEADER", Body: publisher.GameInfo[game].state}
 		subscriber.MessageChannel <- message
 	}
 	// add subscriber to game
 	publisher.Games[game][subscriber] = struct{}{}
-
-	// tell leader number of players in game
-	message := Message{GameCode: game, Command: "PLAYER COUNT", Body: strconv.Itoa(len(publisher.Games[game]))}
-	publisher.GameInfo[game].leader.MessageChannel <- message
 
 	// have subscriber wait for next round
 	switch publisher.GameInfo[game].state {
@@ -72,6 +68,14 @@ func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, game string) {
 	if len(publisher.Games[game]) == 0 {
 		delete(publisher.Games, game)
 		delete(publisher.GameInfo, game)
+		return
+	}
+
+	// check if player had confirmed choice
+	if _, ok := publisher.GameInfo[game].confirmed[subscriber.Name]; ok {
+		delete(publisher.GameInfo[game].confirmed, subscriber.Name)
+		message := Message{GameCode: game, Command: "CONFIRMED CHOICES", Body: strconv.Itoa(len(publisher.GameInfo[game].confirmed))}
+		publisher.GameInfo[game].leader.MessageChannel <- message
 	}
 
 	// elect new leader if previous leader is unsubscribing
@@ -101,10 +105,6 @@ func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, game string) {
 		message = Message{GameCode: game, Command: "NEW ROUND", Body: publisher.GameInfo[game].state}
 		publisher.GameInfo[game].leader.MessageChannel <- message
 	}
-
-	// tell leader number of players in game
-	message := Message{GameCode: game, Command: "PLAYER COUNT", Body: strconv.Itoa(len(publisher.Games[game]))}
-	publisher.GameInfo[game].leader.MessageChannel <- message
 
 	log.Println(subscriber.Name + " unsubscribed from game " + game)
 }

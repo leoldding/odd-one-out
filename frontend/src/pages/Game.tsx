@@ -11,12 +11,13 @@ const Game: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [questionText, setQuestionText] = useState<string>("");
-    const [leaderText, setLeaderText] = useState<string>("Get Question");
+    const [nextGameState, setNextGameState] = useState<string>("Get Question");
     const [copyText, setCopyText] = useState<string>("Click to copy share link!");
     const [copied, setCopied] = useState<boolean>(false);
     const [leader, setLeader] = useState<boolean>(false);
     const [players, setPlayers] = useState<Player[]>([]);
     const [playerCount, setPlayerCount] = useState<number>(0);
+    const [waitingPlayerCount, setWaitingPlayerCount] = useState<number>(0);
     const [dropdown, setDropdown] = useState<string>("");
     const [choice, setChoice] = useState<string>("");
     const [choiceCount, setChoiceCount] = useState<number>(0);
@@ -70,11 +71,19 @@ const Game: React.FC = () => {
                     ]
                     return sortPlayers(updatedPlayers);
                 });
+                console.log("ADD TO PLAYER COUNT")
+                if (nextGameState === "Get Question") {
+                    setPlayerCount(prevPlayerCount => prevPlayerCount + 1);
+                } else {
+                    setWaitingPlayerCount(prevWaitingPlayerCount => prevWaitingPlayerCount + 1);
+                }
             } else if (message.Command === "PLAYER LEAVING") {
                 setPlayers((prevPlayers) => {
                     const updatedPlayers = prevPlayers.filter(player => player.name !== message.Body)
                     return sortPlayers(updatedPlayers);
                 });
+                console.log("REMOVE FROM PLAYER COUNT")
+                setPlayerCount(prevPlayerCount => prevPlayerCount - 1);
             } else if (message.Command === "OTHER PLAYERS") {
                 const addPlayers = (names: string[]) => {
                     setPlayers(prevPlayers => {
@@ -87,10 +96,12 @@ const Game: React.FC = () => {
                 };
                 const otherPlayers = message.Body.split(",");
                 addPlayers(otherPlayers);
+                setPlayerCount(otherPlayers.length);
             } else if (message.Command === "GET QUESTION") {
                 setQuestionText(message.Body);
                 setChoice("");
                 setChoiceCount(0);
+                setDropdown("");
             } else if (message.Command === "REVEAL QUESTION" || message.Command === "ODD ONE LEFT") {
                 setQuestionText(message.Body);
             } else if (message.Command === "REVEAL ODD ONE OUT") {
@@ -98,17 +109,15 @@ const Game: React.FC = () => {
                 console.log(message.Body)
             } else if (message.Command === "NEW LEADER") {
                 setLeader(true);
-                setLeaderText(message.Body);
+                setNextGameState(message.Body);
             } else if (message.Command === "NEW ROUND") {
-                setLeaderText(message.Body);
+                setNextGameState(message.Body);
             } else if (message.Command === "WAIT") {
                 setWait(parseInt(message.Body));
                 setQuestionText("Waiting for next round to start...")
-            } else if (message.Command === "PLAYER COUNT") {
-                setPlayerCount(parseInt(message.Body));
             } else if (message.Command === "CONFIRMED CHOICES") {
                 setChoiceCount(parseInt(message.Body));
-                console.log(message.Body)
+                console.log("choice count: " + message.Body)
             }
         };
 
@@ -142,13 +151,15 @@ const Game: React.FC = () => {
     // commands from leader
     const handleLeaderButton = () => {
         if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
-            websocketRef.current.send(leaderText);
-            if (leaderText === "Get Question") {
-                setLeaderText("Reveal Question");
-            } else if (leaderText === "Reveal Question") {
-                setLeaderText("Reveal Odd One Out");
+            websocketRef.current.send(nextGameState);
+            if (nextGameState === "Get Question") {
+                setNextGameState("Reveal Question");
+            } else if (nextGameState === "Reveal Question") {
+                setNextGameState("Reveal Odd One Out");
             } else {
-                setLeaderText("Get Question")
+                setNextGameState("Get Question");
+                setPlayerCount(prevPlayerCount => prevPlayerCount + waitingPlayerCount);
+                setWaitingPlayerCount(0);
             }
         }
     }
@@ -161,7 +172,7 @@ const Game: React.FC = () => {
                     <h2> {questionText} </h2>
                 </div>
                 <div>
-                    {!choice && <select value={dropdown} onChange={handleDropdownChange}>
+                    {!choice && <select value={dropdown} onChange={handleDropdownChange} disabled={!questionText}>
                         <option key={""} value={""} disabled> Select Player </option>
                         {players.map(player => (
                             <option key={player.name}>
@@ -176,7 +187,7 @@ const Game: React.FC = () => {
                 </button>
                 <div>
                     <button type="button" onClick={handleChoiceButton} disabled={!!choice || !dropdown}> Confirm Choice </button>
-                    {leader && <button type="button" onClick={handleLeaderButton} disabled={playerCount < 3 || (leaderText === "Reveal Question" && choiceCount < playerCount)}> {leaderText} </button>}
+                    {leader && <button type="button" onClick={handleLeaderButton} disabled={playerCount < 3 || (nextGameState === "Reveal Question" && choiceCount < playerCount)}> {nextGameState} </button>}
                 </div>
             </main>
         </div>
@@ -184,3 +195,5 @@ const Game: React.FC = () => {
 }
 
 export default Game;
+
+
