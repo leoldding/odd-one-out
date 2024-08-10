@@ -8,10 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/leoldding/odd-one-out/handlers"
 	"github.com/leoldding/odd-one-out/pubsub"
-	"github.com/leoldding/odd-one-out/services"
 )
-
-var Publisher *pubsub.Publisher
 
 func main() {
 	router := mux.NewRouter()
@@ -19,10 +16,10 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 
-	handlers.RegisterRoomHandlers(router)
-	handlers.RegisterGameHandlers(router)
+	publisher := pubsub.NewPublisher()
 
-	services.CreatePublisher()
+	handlers.RegisterRoomHandlers(router, publisher)
+	handlers.RegisterGameHandlers(router, publisher)
 
 	headersOk := cors.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	originsOk := cors.AllowedOrigins([]string{"http://localhost:5173"})

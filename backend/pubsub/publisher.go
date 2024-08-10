@@ -64,6 +64,8 @@ func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, game string) {
 
 	// remove subscriber from game
 	delete(publisher.Games[game], subscriber)
+	log.Println(subscriber.Name + " unsubscribed from game " + game)
+
 	// delete game if empty
 	if len(publisher.Games[game]) == 0 {
 		delete(publisher.Games, game)
@@ -105,8 +107,6 @@ func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, game string) {
 		message = Message{GameCode: game, Command: "NEW ROUND", Body: publisher.GameInfo[game].state}
 		publisher.GameInfo[game].leader.MessageChannel <- message
 	}
-
-	log.Println(subscriber.Name + " unsubscribed from game " + game)
 }
 
 func (publisher *Publisher) Broadcast(game string, command string, body string) {
