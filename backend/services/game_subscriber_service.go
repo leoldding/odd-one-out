@@ -40,6 +40,5 @@ func JoinGame(w http.ResponseWriter, r *http.Request, publisher *pubsub.Publishe
 	go subscriber.Run(publisher)
 
 	// subscribe to publisher
-	publisher.Broadcast(subscriber.GameCode, "PLAYER JOINING", subscriber.Name)
 	publisher.Subscribe(&subscriber, subscriber.GameCode)
 }

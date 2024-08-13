@@ -7,25 +7,40 @@ type Player = {
 }
 
 const Game: React.FC = () => {
+    enum gameState {
+        GETQUESTION = "Get Question",
+        REVEALQUESTION = "Reveal Question",
+        REVEALOOO = "Reveal Odd One Out"
+    }
+
     const { code } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const [questionText, setQuestionText] = useState<string>("");
-    const [nextGameState, setNextGameState] = useState<string>("Get Question");
+    const [nextGameState, setNextGameState] = useState<gameState>(gameState.GETQUESTION);
     const [copyText, setCopyText] = useState<string>("Click to copy share link!");
     const [copied, setCopied] = useState<boolean>(false);
     const [leader, setLeader] = useState<boolean>(false);
     const [players, setPlayers] = useState<Player[]>([]);
     const [playerCount, setPlayerCount] = useState<number>(0);
-    const [waitingPlayerCount, setWaitingPlayerCount] = useState<number>(0);
     const [dropdown, setDropdown] = useState<string>("");
+    const dropdownRef = useRef<string>("");
     const [choice, setChoice] = useState<string>("");
-    const [choiceCount, setChoiceCount] = useState<number>(0);
-    const [wait, setWait] = useState<number>(0);
+    const [disableButton, setDisableButton] = useState<boolean>(true);
+    const [wait, setWait] = useState<boolean>(false);
     const websocketRef = useRef<WebSocket | null>(null);
 
     const sortPlayers = (players: Player[]) => {
         return players.sort((a, b) => a.name.localeCompare(b.name))
+    };
+
+    const playerExists = (name: string) => {
+        players.forEach((player) => {
+            if (player.name == name) {
+                return true;
+            }
+        });
+        return false;
     };
 
     // changes text of copy link button
@@ -61,63 +76,49 @@ const Game: React.FC = () => {
         // wait on commands from backend
         websocket.onmessage = (event) => {
             const message = JSON.parse(event.data);
-            if (wait != 0) {
-                setWait(wait - 1);
-            } else if (message.Command === "PLAYER JOINING") {
-                setPlayers((prevPlayers) => {
-                    const updatedPlayers = [
-                        ...prevPlayers,
-                        { name: message.Body }
-                    ]
-                    return sortPlayers(updatedPlayers);
-                });
-                console.log("ADD TO PLAYER COUNT")
-                if (nextGameState === "Get Question") {
-                    setPlayerCount(prevPlayerCount => prevPlayerCount + 1);
-                } else {
-                    setWaitingPlayerCount(prevWaitingPlayerCount => prevWaitingPlayerCount + 1);
+            if (wait && message.Command == "DONE WAITING") {
+                setWait(false);
+                console.log("DONE WAITING");
+            }
+            if (!wait) {
+                if (message.Command === "PLAYERS") {
+                    const addPlayers = (names: string[]) => {
+                        setPlayers(() => {
+                            const updatedPlayers = [
+                                ...names.map(name => ({ name }))
+                            ]
+                            return sortPlayers(updatedPlayers);
+                        });
+                    };
+                    const otherPlayers = message.Body.split(",");
+                    addPlayers(otherPlayers);
+                    setPlayerCount(otherPlayers.length);
+                    if (dropdownRef.current != "" && !playerExists(dropdownRef.current)) {
+                        setDropdown("");
+                        dropdownRef.current = "";
+                    }
+                } else if (message.Command === "GET QUESTION") {
+                    setQuestionText(message.Body);
+                    setChoice("");
+                    setDropdown("");
+                    setDisableButton(true)
+                } else if (message.Command === "REVEAL QUESTION" || message.Command === "ODD ONE LEFT" || message.Command === "NOT ENOUGH PLAYERS") {
+                    setQuestionText(message.Body);
+                } else if (message.Command === "REVEAL ODD ONE OUT") {
+                    // chancge background color
+                    console.log(message.Body)
+                    setNextGameState(gameState.GETQUESTION);
+                } else if (message.Command === "NEW LEADER") {
+                    setLeader(true);
+                    setNextGameState(message.Body);
+                } else if (message.Command === "NEW ROUND") {
+                    setNextGameState(message.Body);
+                } else if (message.Command === "WAIT") {
+                    setWait(true);
+                    setQuestionText("Waiting for next round to start...")
+                } else if (message.Command === "ALL CONFIRMED") {
+                    setDisableButton(false);
                 }
-            } else if (message.Command === "PLAYER LEAVING") {
-                setPlayers((prevPlayers) => {
-                    const updatedPlayers = prevPlayers.filter(player => player.name !== message.Body)
-                    return sortPlayers(updatedPlayers);
-                });
-                console.log("REMOVE FROM PLAYER COUNT")
-                setPlayerCount(prevPlayerCount => prevPlayerCount - 1);
-            } else if (message.Command === "OTHER PLAYERS") {
-                const addPlayers = (names: string[]) => {
-                    setPlayers(prevPlayers => {
-                        const updatedPlayers = [
-                            ...prevPlayers,
-                            ...names.map(name => ({ name }))
-                        ]
-                        return sortPlayers(updatedPlayers);
-                    });
-                };
-                const otherPlayers = message.Body.split(",");
-                addPlayers(otherPlayers);
-                setPlayerCount(otherPlayers.length);
-            } else if (message.Command === "GET QUESTION") {
-                setQuestionText(message.Body);
-                setChoice("");
-                setChoiceCount(0);
-                setDropdown("");
-            } else if (message.Command === "REVEAL QUESTION" || message.Command === "ODD ONE LEFT") {
-                setQuestionText(message.Body);
-            } else if (message.Command === "REVEAL ODD ONE OUT") {
-                // chancge background color
-                console.log(message.Body)
-            } else if (message.Command === "NEW LEADER") {
-                setLeader(true);
-                setNextGameState(message.Body);
-            } else if (message.Command === "NEW ROUND") {
-                setNextGameState(message.Body);
-            } else if (message.Command === "WAIT") {
-                setWait(parseInt(message.Body));
-                setQuestionText("Waiting for next round to start...")
-            } else if (message.Command === "CONFIRMED CHOICES") {
-                setChoiceCount(parseInt(message.Body));
-                console.log("choice count: " + message.Body)
             }
         };
 
@@ -137,14 +138,16 @@ const Game: React.FC = () => {
     };
 
     const handleDropdownChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setDropdown(event.target.value);
+        const value = event.target.value;
+        setDropdown(value);
+        dropdownRef.current = value;
     }
 
     // confirm answer choice
     const handleChoiceButton = () => {
         if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN && dropdown !== "") {
             websocketRef.current.send("Confirm Choice");
-            setChoice(dropdown);
+            setChoice(dropdownRef.current);
         }
     };
 
@@ -152,14 +155,12 @@ const Game: React.FC = () => {
     const handleLeaderButton = () => {
         if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
             websocketRef.current.send(nextGameState);
-            if (nextGameState === "Get Question") {
-                setNextGameState("Reveal Question");
-            } else if (nextGameState === "Reveal Question") {
-                setNextGameState("Reveal Odd One Out");
+            if (nextGameState === gameState.GETQUESTION) {
+                setNextGameState(gameState.REVEALQUESTION);
+            } else if (nextGameState === gameState.REVEALQUESTION) {
+                setNextGameState(gameState.REVEALOOO);
             } else {
-                setNextGameState("Get Question");
-                setPlayerCount(prevPlayerCount => prevPlayerCount + waitingPlayerCount);
-                setWaitingPlayerCount(0);
+                setNextGameState(gameState.GETQUESTION);
             }
         }
     }
@@ -172,7 +173,7 @@ const Game: React.FC = () => {
                     <h2> {questionText} </h2>
                 </div>
                 <div>
-                    {!choice && <select value={dropdown} onChange={handleDropdownChange} disabled={!questionText}>
+                    {!choice && <select value={dropdown} onChange={handleDropdownChange} disabled={!questionText || wait}>
                         <option key={""} value={""} disabled> Select Player </option>
                         {players.map(player => (
                             <option key={player.name}>
@@ -187,7 +188,7 @@ const Game: React.FC = () => {
                 </button>
                 <div>
                     <button type="button" onClick={handleChoiceButton} disabled={!!choice || !dropdown}> Confirm Choice </button>
-                    {leader && <button type="button" onClick={handleLeaderButton} disabled={playerCount < 3 || (nextGameState === "Reveal Question" && choiceCount < playerCount)}> {nextGameState} </button>}
+                    {leader && <button type="button" onClick={handleLeaderButton} disabled={playerCount < 3 || (nextGameState === "Reveal Question" && disableButton)}> {nextGameState} </button>}
                 </div>
             </main>
         </div>
