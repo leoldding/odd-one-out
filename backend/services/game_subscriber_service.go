@@ -16,7 +16,7 @@ var upgrader = ws.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func JoinGame(w http.ResponseWriter, r *http.Request) {
+func JoinGame(w http.ResponseWriter, r *http.Request, publisher *pubsub.Publisher) {
 	// upgrade to websocket
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	websocket, err := upgrader.Upgrade(w, r, nil)
@@ -37,9 +37,8 @@ func JoinGame(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(register, &subscriber)
 	subscriber.Websocket = websocket
 	subscriber.MessageChannel = make(chan pubsub.Message, 100)
-	go subscriber.Run(Publisher)
+	go subscriber.Run(publisher)
 
 	// subscribe to publisher
-	Publisher.Broadcast(subscriber.GameCode, "PLAYER JOINING", subscriber.Name)
-	Publisher.Subscribe(&subscriber, subscriber.GameCode)
+	publisher.Subscribe(&subscriber, subscriber.GameCode)
 }

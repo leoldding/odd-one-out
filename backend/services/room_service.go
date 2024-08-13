@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/leoldding/odd-one-out/models"
+	"github.com/leoldding/odd-one-out/pubsub"
 )
 
 func CreateRoom(createRoomRequest models.CreateRoomRequest, createRoomResponse *models.CreateRoomResponse) error {
@@ -17,8 +18,8 @@ func CreateRoom(createRoomRequest models.CreateRoomRequest, createRoomResponse *
 	return nil
 }
 
-func JoinRoom(joinRoomRequest models.JoinRoomRequest, joinRoomResponse *models.JoinRoomResponse) error {
-	if Publisher.CheckIfNameExists(joinRoomRequest.GameCode, joinRoomRequest.Name) {
+func JoinRoom(joinRoomRequest models.JoinRoomRequest, joinRoomResponse *models.JoinRoomResponse, publisher *pubsub.Publisher) error {
+	if publisher.CheckIfNameExists(joinRoomRequest.GameCode, joinRoomRequest.Name) {
 		return errors.New("Name exists in game already.")
 	}
 	joinRoomResponse.Player.Name = joinRoomRequest.Name

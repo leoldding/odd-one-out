@@ -23,15 +23,10 @@ func (subscriber *Subscriber) Run(publisher *Publisher) {
 	go subscriber.ReadFromWebsocket(publisher, stop)
 	go subscriber.SendMessagesToWebsocket(publisher, stop)
 
-	otherPlayers := publisher.GetPlayersInGame(subscriber.GameCode)
-	message := Message{GameCode: subscriber.GameCode, Command: "OTHER PLAYERS", Body: otherPlayers}
-	subscriber.MessageChannel <- message
-
 	<-stop
 	<-stop
 
 	publisher.Unsubscribe(subscriber, subscriber.GameCode)
-	publisher.Broadcast(subscriber.GameCode, "PLAYER LEAVING", subscriber.Name)
 	subscriber.Websocket.Close()
 }
 
@@ -50,12 +45,14 @@ func (subscriber *Subscriber) ReadFromWebsocket(publisher *Publisher, stop chan 
 		}
 
 		command := string(message)
-		if command == "Get Question" {
+		if command == GETQUESTION {
 			publisher.GetQuestions(subscriber.GameCode)
-		} else if command == "Reveal Question" {
+		} else if command == REVEALQUESTION {
 			publisher.RevealQuestion(subscriber.GameCode)
-		} else if command == "Reveal Odd One Out" {
+		} else if command == REVEALOOO {
 			publisher.RevealOddOneOut(subscriber.GameCode)
+		} else if command == "Confirm Choice" {
+			publisher.ConfirmChoices(subscriber.GameCode, subscriber.Name)
 		}
 	}
 }
